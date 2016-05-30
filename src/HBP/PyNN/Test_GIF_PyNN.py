@@ -15,7 +15,7 @@ import pyNN.neuron as sim
 
 from GIF import *
 from GIF_HT import *
-from GIF_PyNN import GIFNeuron, GIFNeuronType, simulate_seed
+from GIF_PyNN import simulate_seed
 
 from Filter_Rect_LogSpaced import *
 from Filter_Exps import *
@@ -66,25 +66,27 @@ for I0 in I0_all :
 I = np.concatenate(I)
 
 T = len(I)*dt
-print "T = ", T
+print("T = ", T)
 current_source = sim.StepCurrentSource(amplitudes=I, times=np.arange(0, T, dt))
 
 # DEFINE NEURON GIF MODEL (EXP BASED KERNELS)
 ####################################################
 
-p_GIF = sim.Population(1, GIFNeuronType(dt_interpolation=dt,
-                                        tau_eta1=10.0,  tau_eta2=50.0,    tau_eta3=250.0,
-                                        a_eta1=0.2,     a_eta2=0.05,      a_eta3=0.025,
-                                        tau_gamma1=5.0, tau_gamma2=200.0, tau_gamma3=250.0,
-                                        a_gamma1=15.0,  a_gamma2=3.0,     a_gamma3=1.0))
+p_GIF = sim.Population(1, sim.GIF_cond_exp(tau_m=20.0, cm=0.2, v_rest=-65.0, v_reset=-50,
+                                           tau_refrac=4.0, v_t_star=-48.0, delta_v=0.5, lambda0=1.0,
+                                           tau_eta1=10.0, tau_eta2=50.0, tau_eta3=250.0,
+                                           a_eta1=0.2, a_eta2=0.05, a_eta3=0.025,
+                                           tau_gamma1=5.0, tau_gamma2=200.0, tau_gamma3=250.0,
+                                           a_gamma1=15.0, a_gamma2=3.0, a_gamma3=1.0))
 
 p_GIF.inject(current_source)
 
-p_GIF.record(('v', 'i_eta', 'gamma_sum', 'p_dontspike', 'rand'))
+p_GIF.record(('v', 'i_eta', 'gamma1', 'gamma2', 'gamma3', 'rand'))
 
 # Simulate model response
-(htime, hV, heta_sum, hV_T, hspks, hp_dontspike, hurand, hi) = simulate_seed(p_GIF, I, V0, seed, passive_axon=False)
+(htime, hV, heta_sum, hV_T, hspks, hurand, hi) = simulate_seed(p_GIF, I, V0, seed, passive_axon=False)
 
+print hurand
 
 # DEFINE NEW GIF MODEL (EXP BASED KERNELS)
 ####################################################
@@ -143,7 +145,7 @@ plt.ylim(-0.1,0.1)
 plt.ylabel("mV")
 plt.legend()
 
-plt.savefig('./Comparison_PyNN3.pdf', dpi=300)
+plt.savefig('./Comparison_PyNN4.pdf', dpi=300)
 plt.show()
 
 
@@ -151,4 +153,4 @@ plt.show()
 ####################################################
 
 dic =  myGIF.getResultDictionary()
-print dic['model']
+print(dic['model'])
